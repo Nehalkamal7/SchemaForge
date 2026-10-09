@@ -1,19 +1,494 @@
-<!doctype html>
-<html>
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width" />
-		<title>My static Space</title>
-		<link rel="stylesheet" href="style.css" />
-	</head>
-	<body>
-		<div class="card">
-			<h1>Welcome to your static Space!</h1>
-			<p>You can modify this app directly by editing <i>index.html</i> in the Files and versions tab.</p>
-			<p>
-				Also don't forget to check the
-				<a href="https://huggingface.co/docs/hub/spaces" target="_blank">Spaces documentation</a>.
-			</p>
-		</div>
-	</body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SchemaForge — Text-to-SQL & Query Optimization Engine</title>
+  <style>
+    :root {
+      --bg-base: #090c10;
+      --bg-surface: #0d1117;
+      --bg-subtle: #161b22;
+      --border: #30363d;
+      --border-focus: #58a6ff;
+      --text-main: #f0f6fc;
+      --text-muted: #8b949e;
+      --primary: #1f6feb;
+      --primary-hover: #388bfd;
+      --danger: #f85149;
+      --warning: #d29922;
+      --success: #3fb950;
+      --font-code: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg-base);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    header {
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-surface);
+      padding: 14px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand-title {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+    }
+    .brand-subtitle {
+      color: var(--text-muted);
+      font-size: 12px;
+      margin-left: 8px;
+      padding-left: 8px;
+      border-left: 1px solid var(--border);
+    }
+    .badge {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    main {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .config-strip {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .config-strip label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+    .config-strip input {
+      flex: 1;
+      min-width: 280px;
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 12px;
+      color: var(--text-main);
+      font-family: var(--font-code);
+      font-size: 12px;
+    }
+    .config-strip input:focus {
+      outline: none;
+      border-color: var(--border-focus);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 960px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+    }
+    .card-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .card-header h2 {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: var(--text-muted);
+    }
+    .card-body {
+      padding: 16px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    label.field-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      letter-spacing: 0.4px;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    textarea, input[type="text"] {
+      width: 100%;
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+      color: var(--text-main);
+      font-family: var(--font-code);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    textarea:focus, input[type="text"]:focus {
+      outline: none;
+      border-color: var(--border-focus);
+    }
+
+    .button-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    button {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      border-radius: 6px;
+      padding: 7px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    button:hover {
+      background: #21262d;
+      border-color: #8b949e;
+    }
+    button.primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+    button.primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .output-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex: 1;
+    }
+    .code-block {
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      font-family: var(--font-code);
+      font-size: 12px;
+      color: #79c0ff;
+      white-space: pre-wrap;
+      overflow-x: auto;
+      min-height: 120px;
+    }
+
+    .heuristics-box {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      background: var(--bg-base);
+    }
+    .heuristics-title {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .check-item {
+      font-size: 12px;
+      padding: 4px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-code);
+    }
+    .check-pass { color: var(--success); }
+    .check-warn { color: var(--warning); }
+
+    .ai-analysis-box {
+      border: 1px solid rgba(56, 139, 253, 0.2);
+      border-radius: 6px;
+      padding: 12px;
+      background: rgba(31, 111, 235, 0.05);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .ai-analysis-box strong {
+      color: var(--border-focus);
+      display: block;
+      margin-bottom: 4px;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 50px 16px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex; align-items:center;">
+    <span class="brand-title">SchemaForge</span>
+    <span class="brand-subtitle">Text-to-SQL Synthesizer & Execution Profiler</span>
+  </div>
+  <div class="badge" id="engineStatus">Ready</div>
+</header>
+
+<main>
+  <div class="config-strip">
+    <label for="apiKey">Gemini API Key</label>
+    <input type="password" id="apiKey" placeholder="AIzaSy...">
+    <button id="saveKey">Store Key</button>
+    <span id="keyLabel" style="font-size:12px; color:var(--text-muted);">Stored locally in browser session</span>
+  </div>
+
+  <div class="grid">
+    <!-- Input Section -->
+    <div class="card">
+      <div class="card-header">
+        <h2>Database Definition & Prompt</h2>
+        <span class="badge">DDL / SQL</span>
+      </div>
+      <div class="card-body">
+        <div>
+          <label class="field-label">Schema DDL</label>
+          <textarea id="schemaInput" style="height: 180px;" spellcheck="false" placeholder="CREATE TABLE users (id INT, email VARCHAR)..."></textarea>
+        </div>
+
+        <div>
+          <label class="field-label">Natural Language Request</label>
+          <input type="text" id="queryPrompt" placeholder="e.g., Get top 5 customers who spent over 500 dollars this month">
+        </div>
+
+        <div class="button-group">
+          <button id="demoBtn">Load Benchmark Schema</button>
+          <button id="clearBtn">Clear</button>
+        </div>
+
+        <button id="generateBtn" class="primary" style="margin-top: 10px; width: 100%;">Synthesize SQL & Run Diagnostic</button>
+      </div>
+    </div>
+
+    <!-- Output Section -->
+    <div class="card">
+      <div class="card-header">
+        <h2>Synthesized Query & Optimization Plan</h2>
+        <button id="exportBtn" style="padding: 3px 8px; font-size: 11px;">Export Plan</button>
+      </div>
+      <div class="card-body">
+        <div id="outputContainer" class="output-section">
+          <div class="empty-state">No query synthesized. Load benchmark or define schema to start.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+
+// Key storage
+window.addEventListener('DOMContentLoaded', () => {
+  const stored = localStorage.getItem('schemaforge_gemini_key');
+  if (stored) {
+    $('apiKey').value = stored;
+    $('keyLabel').textContent = "Key configured";
+    $('keyLabel').style.color = "var(--success)";
+  }
+});
+
+$('saveKey').addEventListener('click', () => {
+  const val = $('apiKey').value.trim();
+  if (val) {
+    localStorage.setItem('schemaforge_gemini_key', val);
+    $('keyLabel').textContent = "Key saved";
+    $('keyLabel').style.color = "var(--success)";
+  } else {
+    localStorage.removeItem('schemaforge_gemini_key');
+    $('keyLabel').textContent = "Key cleared";
+    $('keyLabel').style.color = "var(--text-muted)";
+  }
+});
+
+const benchmarkDDL = `CREATE TABLE customers (
+    customer_id INT PRIMARY KEY,
+    name VARCHAR(100),
+    signup_date DATE,
+    country VARCHAR(50)
+);
+
+CREATE TABLE orders (
+    order_id INT PRIMARY KEY,
+    customer_id INT,
+    order_date TIMESTAMP,
+    total_amount DECIMAL(10,2),
+    status VARCHAR(20),
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
+);`;
+
+const benchmarkPrompt = "Find total revenue per country for completed orders in 2024, showing top 3 countries.";
+
+let lastAnalysis = null;
+
+function runLocalLint(sql) {
+  const checks = [];
+  
+  if (/\bSELECT\s+\*/i.test(sql)) {
+    checks.push({ status: 'warn', msg: 'Wildcard projection detected: SELECT * increases network I/O and invalidates index covers.' });
+  } else {
+    checks.push({ status: 'pass', msg: 'Explicit column projection applied.' });
+  }
+
+  if (!/\bLIMIT\b/i.test(sql) && !/\bCOUNT\b/i.test(sql) && !/\bSUM\b/i.test(sql)) {
+    checks.push({ status: 'warn', msg: 'Unbounded result set: Query lacks LIMIT clause, risk of high memory usage.' });
+  } else {
+    checks.push({ status: 'pass', msg: 'Bounded query or aggregate function utilized.' });
+  }
+
+  if (/\bJOIN\b/i.test(sql) && !/\bON\b/i.test(sql)) {
+    checks.push({ status: 'warn', msg: 'Potential Cartesian product: JOIN detected without explicit ON condition.' });
+  } else if (/\bJOIN\b/i.test(sql)) {
+    checks.push({ status: 'pass', msg: 'Explicit join predicate present.' });
+  }
+
+  return checks;
+}
+
+$('generateBtn').addEventListener('click', async () => {
+  const schema = $('schemaInput').value.trim();
+  const prompt = $('queryPrompt').value.trim();
+  const key = $('apiKey').value.trim() || localStorage.getItem('schemaforge_gemini_key');
+
+  if (!schema || !prompt) {
+    alert("Please provide both the Schema DDL and your query request.");
+    return;
+  }
+  if (!key) {
+    alert("Please provide a Gemini API Key.");
+    return;
+  }
+
+  $('engineStatus').textContent = "Synthesizing Query";
+  $('outputContainer').innerHTML = '<div class="empty-state">Synthesizing SQL and computing index access plan...</div>';
+
+  const systemInstruction = `You are a Principal Database Architect and SQL Optimization Engine.
+Given a database Schema DDL and a user query request, synthesize standard ANSI SQL and analyze execution efficiency.
+Return strictly a JSON object with these exact keys without markdown fences:
+- "sql": synthesized SQL string
+- "complexity": "LOW", "MEDIUM", or "HIGH"
+- "index_recommendations": array of suggested indexes to accelerate this query (e.g. "orders(customer_id, status)")
+- "explanation": brief explanation of why this query strategy was chosen (joins, aggregations, filtering order)`;
+
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${key}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [
+          { role: "user", parts: [{ text: `${systemInstruction}\n\nSchema:\n${schema}\n\nRequest:\n${prompt}` }] }
+        ],
+        generationConfig: { responseMimeType: "application/json" }
+      })
+    });
+
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+
+    const result = JSON.parse(data.candidates[0].content.parts[0].text);
+    const lintResults = runLocalLint(result.sql);
+
+    lastAnalysis = { result, lintResults };
+
+    $('outputContainer').innerHTML = `
+      <div>
+        <label class="field-label">Synthesized Query</label>
+        <div class="code-block">${escape(result.sql)}</div>
+      </div>
+
+      <div class="heuristics-box">
+        <div class="heuristics-title">Static Performance Checks</div>
+        ${lintResults.map(chk => `
+          <div class="check-item ${chk.status === 'pass' ? 'check-pass' : 'check-warn'}">
+            [${chk.status.toUpperCase()}]${escape(chk.msg)}
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="ai-analysis-box">
+        <strong>Execution Plan & Optimization Insight</strong>
+        <div>Complexity: <strong>${escape(result.complexity)}</strong></div>
+        <div style="margin-top:6px;">${escape(result.explanation)}</div>
+        <div style="margin-top:8px; font-family:var(--font-code); color:var(--text-muted);">
+          Suggested Indexes: ${result.index_recommendations.map(idx => `<span style="color:#79c0ff;">${escape(idx)}</span>`).join(', ')}
+        </div>
+      </div>
+    `;
+
+    $('engineStatus').textContent = "Complete";
+  } catch (err) {
+    $('engineStatus').textContent = "Failed";
+    $('outputContainer').innerHTML = `<div class="empty-state" style="color:var(--danger)">Error: ${escape(err.message)}</div>`;
+  }
+});
+
+function escape(str) {
+  return String(str || '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[c]);
+}
+
+$('demoBtn').addEventListener('click', () => {$('schemaInput').value = benchmarkDDL;
+  $('queryPrompt').value = benchmarkPrompt;
+});
+
+$('clearBtn').addEventListener('click', () => {$('schemaInput').value = '';
+  $('queryPrompt').value = '';$('outputContainer').innerHTML = '<div class="empty-state">No query synthesized.</div>';
+  $('engineStatus').textContent = "Ready";
+});
+
+$('exportBtn').addEventListener('click', () => {
+  if (!lastAnalysis) return;
+  const blob = new Blob([JSON.stringify({ project: "SchemaForge", ...lastAnalysis }, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "schemaforge-plan.json";
+  a.click();
+  URL.revokeObjectURL(url);
+});
+</script>
+</body>
 </html>
