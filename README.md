@@ -16,4 +16,4 @@ SchemaForge translates natural language business inquiries into optimized, ANSI-
 - Deployed on Hugging Face Spaces
 
 ## Live Demo
-[SchemaForge Live Space](https://huggingface.co/spaces/YOUR_USERNAME/schemaforge-ai)
+[SchemaForge Live Space](https://huggingface.co/spaces/nehalkamal7/schemaforge-ai)
